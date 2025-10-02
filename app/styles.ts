@@ -1,19 +1,19 @@
-import { Dimensions, NativeModules, Platform, StyleSheet } from "react-native";
+import Constants from 'expo-constants';
+import { Dimensions, StyleSheet } from "react-native";
 
 const textColor = '#555555';
 const textColorLight = '#cccccc';
 const backgroundColor = '#ffffff';
 
-const { StatusBarManager } = NativeModules;
-const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBarManager.HEIGHT;
+const STATUSBAR_HEIGHT = Constants.statusBarHeight;
 
 export default StyleSheet.create({
     menu: {
+        marginTop: STATUSBAR_HEIGHT,
         height: 56,
         alignItems: 'flex-end'
     },
     menuTrigger: {
-        color: textColorLight,
         fontSize: 35,
         width: 40,
         textAlign: 'center',

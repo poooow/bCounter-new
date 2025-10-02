@@ -1,8 +1,8 @@
 import SlideView from '@/components/slideView';
 import { generateNickname } from '@/helpers/generateNickname';
-import getDrinkIcon from '@/helpers/getDrinkIcon';
+import getDrinkIcon, { getNextIcon } from '@/helpers/getDrinkIcon';
 import { retrieveData, updateData } from '@/helpers/storage';
-import React, { JSX, useEffect, useRef, useState } from 'react';
+import React, { JSX, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Linking,
   Text,
@@ -18,7 +18,7 @@ export interface Slide {
   drinks: { name: string; time: number }[],
   drinkName: string,
   icon: number,
-  graph: number[],
+  graph: { value: number }[],
   counterName: string,
 }
 
@@ -70,110 +70,122 @@ export default function Home(): JSX.Element {
       }
 
       let newSlides = [...slides]
-      newSlides[currentSlideId].graph = graph;
+      newSlides[currentSlideId].graph = graph.map((value) => ({ value }));
       setSlides(slides)
     };
     updateGraph()
   }, [slides, currentSlideId])
 
-  const createSlide = () => {
+  const createSlide = useCallback(() => {
     // Duplicate object
     const newSlide = JSON.parse(JSON.stringify(blankPerson));
     newSlide.counterName = generateNickname()
     setSlides(current => [...current, newSlide])
-  }
+  }, [])
 
-  const deleteSlide = () => {
+  const deleteSlide = useCallback(() => {
     let newSlides = [...slides]
     newSlides.splice(currentSlideId, 1)
     setSlides(newSlides)
-  }
+  }, [slides, currentSlideId])
 
   /*
    * Update counter name
    */
-  const setCounterName = (name: string) => {
+  const setCounterName = useCallback((name: string) => {
     let newPersons = [...slides];
     newPersons[currentSlideId].counterName = name;
     setSlides(newPersons)
-  }
+  }, [slides, currentSlideId])
 
   /*
    * Update drink name and icon if matches keyword
    */
-  const setDrinkName = (name: string) => {
+  const setDrinkName = useCallback((name: string) => {
     let newPersons = [...slides];
-
     const drinkIcon = getDrinkIcon(name);
     if (drinkIcon) newPersons[currentSlideId].icon = drinkIcon;
-
     newPersons[currentSlideId].drinkName = name;
     setSlides(newPersons)
-  }
+  }, [slides, currentSlideId])
 
   /*
    * Add drink for current person
    */
-  const increment = () => {
+  const increment = useCallback(() => {
     const currentTime = Date.now();
-
+    
     const name = String.fromCodePoint(slides[currentSlideId].icon) + ' ' + slides[currentSlideId].drinkName;
-
+    
     const newDrink = { 'name': name, 'time': currentTime };
-
+    
     let newSlides = [...slides];
     newSlides[currentSlideId].count++;
     newSlides[currentSlideId].drinks.push(newDrink);
     setSlides(newSlides)
-  };
+  }, [slides, currentSlideId])
 
   /*
    * Remove last drink for current person
    */
-  const decrement = () => {
+  const decrement = useCallback(() => {
     // Cant be less than 0 drinks
     if (slides[currentSlideId]?.count < 1) return;
-
+    
     let newSlides = [...slides];
     newSlides[currentSlideId].count--;
     newSlides[currentSlideId].drinks.pop();
     setSlides(newSlides)
-  };
+  }, [slides, currentSlideId])
 
   /*
    * Clear all drinks of current person
    */
-  const clear = () => {
+  const clear = useCallback(() => {
     let newSlides = [...slides];
     newSlides[currentSlideId].count = 0;
     newSlides[currentSlideId].drinks = [];
-    newSlides[currentSlideId].graph = [0];
+    newSlides[currentSlideId].graph = [];
     setSlides(newSlides)
-  };
+  }, [slides, currentSlideId]);
+
+  const rotateIcon = useCallback(() => {
+    setSlides(current => {
+      const newSlides = [...current];
+      newSlides[currentSlideId].icon = getNextIcon(newSlides[currentSlideId].icon);
+      return newSlides;
+    })
+  }, [currentSlideId]);
 
   // Fill up slides Array
-  const slideViews = slides.map((slide, index) => (
-    <SlideView
-      key={index}
-      slideId={index}
-      slide={slide}
-      isAdvancedMode={isAdvancedMode}
-      isDarkMode={isDarkMode}
-      setCounterName={setCounterName}
-      setDrinkName={setDrinkName}
-      increment={increment}
-      decrement={decrement}
-      clear={clear} />
-  ))
+  const slideViews = useMemo(() => {
+    const views = slides.map((slide, index) => (
+      <SlideView
+        key={index}
+        slideId={index}
+        slide={slide}
+        isAdvancedMode={isAdvancedMode}
+        isDarkMode={isDarkMode}
+        setCounterName={setCounterName}
+        setDrinkName={setDrinkName}
+        increment={increment}
+        decrement={decrement}
+        rotateIcon={rotateIcon}
+        clear={clear}
+      />
+    ))
 
-  // Last slide with add-person button
-  slideViews.push(
-    <View key={9999} style={styles.lastSwipe}>
-      <Text onPress={createSlide} style={[styles.lastSwipeText, { color: isDarkMode ? '#666' : '#ccc' }]}>
-        +
-      </Text>
-    </View>
-  )
+    // Last slide with add-person button
+    views.push(
+      <View key={9999} style={styles.lastSwipe}>
+        <Text onPress={createSlide} style={[styles.lastSwipeText, { color: isDarkMode ? '#666' : '#ccc' }]}>
+          +
+        </Text>
+      </View>
+    )
+
+    return views
+  }, [slides, isAdvancedMode, isDarkMode, setCounterName, setDrinkName, increment, decrement, clear, createSlide])
 
   return (
     <MenuProvider>

@@ -18,3 +18,9 @@ export default function getDrinkIcon(drink: string) {
   }
   return false;
 }
+
+export function getNextIcon(icon: number) {
+  const values = Object.values(drinks);
+  const index = values.indexOf(icon);
+  return values[(index + 1) % values.length];
+}

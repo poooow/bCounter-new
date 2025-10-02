@@ -1,7 +1,13 @@
+import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Slot } from 'expo-router';
-import 'react-native-reanimated';
+import { Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { enableScreens } from 'react-native-screens';
+
+// Enable screens for better performance
+enableScreens(true);
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -18,7 +24,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Slot />
+      <Stack screenOptions={{ headerShown: false }} />
     </ThemeProvider>
   );
 }

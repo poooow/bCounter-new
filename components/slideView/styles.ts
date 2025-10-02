@@ -1,11 +1,8 @@
-import { StyleSheet, Dimensions, Platform, NativeModules } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
 const textColor = '#555555';
 const textColorLight = '#cccccc';
 const backgroundColor = '#ffffff';
-
-const { StatusBarManager } = NativeModules;
-const STATUSBAR_HEIGHT = Platform.OS === 'ios' ? 20 : StatusBarManager.HEIGHT;
 
 export default StyleSheet.create({
   content: {
@@ -92,8 +89,7 @@ export default StyleSheet.create({
     lineHeight: 21,
   },
   graph: {
-    height: 130,
-    width: '40%',
+    width: '50%',
     marginLeft: 20,
   }
 });

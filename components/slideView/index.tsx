@@ -3,15 +3,15 @@ import { timestampToTime } from '@/helpers/timestampToTime';
 import React, { JSX } from 'react';
 import {
   Alert,
+  Pressable,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
+import { BarChart } from 'react-native-gifted-charts';
 import styles from './styles';
-//@ts-ignore
-import { BarChart, Grid, YAxis } from 'react-native-svg-charts';
 
 interface Props {
   slideId: number;
@@ -22,11 +22,12 @@ interface Props {
   setDrinkName: (name: string) => void;
   increment: () => void;
   decrement: () => void;
+  rotateIcon: () => void;
   clear: () => void;
 }
 
 export default function SlideView(props: Props): JSX.Element {
-  const { slideId, slide, isDarkMode, isAdvancedMode, setCounterName, setDrinkName, increment, decrement, clear } = props;
+  const { slideId, slide, isDarkMode, isAdvancedMode, setCounterName, setDrinkName, increment, decrement, rotateIcon, clear } = props;
 
   return (
     <View key={slideId}>
@@ -45,9 +46,14 @@ export default function SlideView(props: Props): JSX.Element {
           onChangeText={setDrinkName}
           value={slide.drinkName}
         />
-        <Text
-          style={[styles.counter, { color: isDarkMode ? '#fff' : '#000' }]}>{slide.count} {String.fromCodePoint(props.slide.icon)}
-        </Text>
+        <View style={{ flexDirection: 'row' }}>
+          <Text
+            style={[styles.counter, { color: isDarkMode ? '#fff' : '#000' }]}>{slide.count}
+          </Text>
+          <Pressable onPress={rotateIcon}>
+            <Text style={{ fontSize: 80, marginLeft: 10, color: isDarkMode ? '#fff' : '#000' }}>{String.fromCodePoint(props.slide.icon)}</Text>
+          </Pressable>
+        </View>
         <View style={[styles.buttons, { height: isAdvancedMode ? 84 : '30%' }]}>
           <TouchableOpacity onPress={increment}>
             <Text style={[styles.buttonPlus,
@@ -75,7 +81,7 @@ export default function SlideView(props: Props): JSX.Element {
                       text: 'Cancel',
                       style: 'cancel'
                     },
-                    { text: 'Clear', onPress: props.clear },
+                    { text: 'Clear', onPress: clear },
                   ],
                   { cancelable: true }
                 )}
@@ -92,27 +98,25 @@ export default function SlideView(props: Props): JSX.Element {
                 ))}
               </Text>
             </ScrollView>
-            <YAxis
-              data={slide.graph}
-              contentInset={{ top: 10, bottom: 10 }}
-              svg={{
-                fill: 'grey',
-                fontSize: 10,
-              }}
-              numberOfTicks={5}
-              formatLabel={(value: number) => `${Math.round(value / 1000 / 60)} min`}
-            />
-            <BarChart
-              style={styles.graph}
-              data={slide.graph}
-              svg={{ fill: isDarkMode ? '#333' : '#ccc' }}
-              yMin={0}
-            >
-              <Grid />
-            </BarChart>
+            <View style={styles.graph}>
+              <BarChart
+                data={slide.graph.map((ms) => ({ value: (ms.value / 1000 / 60) }))}
+                frontColor={isDarkMode ? '#666' : '#ccc'}
+                spacing={4}
+                hideRules
+                barWidth={100 / slide.graph.length}
+                disablePress
+                yAxisColor='transparent'
+                yAxisTextStyle={{ color: isDarkMode ? '#666' : '#ccc' }}
+                xAxisColor={isDarkMode ? '#666' : '#ccc'}
+                height={120}
+                noOfSections={5}
+                yAxisLabelSuffix=' min'
+              />
+            </View>
           </View>
           : null}
       </View>
-    </View>
+    </View >
   )
 }
